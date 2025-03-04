@@ -47,6 +47,7 @@ type SignerInfoConfig struct {
 	ExtraSignedAttributes   []Attribute
 	ExtraUnsignedAttributes []Attribute
 	SkipCertificates        bool
+	SigningTime             time.Time
 }
 
 type signedData struct {
@@ -159,7 +160,11 @@ func (sd *SignedData) AddSignerChain(ee *x509.Certificate, pkey crypto.PrivateKe
 	attrs := &attributes{}
 	attrs.Add(OIDAttributeContentType, sd.sd.ContentInfo.ContentType)
 	attrs.Add(OIDAttributeMessageDigest, sd.messageDigest)
-	attrs.Add(OIDAttributeSigningTime, time.Now().UTC())
+	signingTime := config.SigningTime
+	if signingTime.IsZero() {
+		signingTime = time.Now()
+	}
+	attrs.Add(OIDAttributeSigningTime, signingTime.UTC())
 	for _, attr := range config.ExtraSignedAttributes {
 		attrs.Add(attr.Type, attr.Value)
 	}
